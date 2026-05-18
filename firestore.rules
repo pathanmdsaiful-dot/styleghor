@@ -69,7 +69,7 @@ service cloud.firestore {
 
     match /metadata/{docId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isSignedIn(); // Customers need to update order counter
     }
 
     match /products/{productId} {

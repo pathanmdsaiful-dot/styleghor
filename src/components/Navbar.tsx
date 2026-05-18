@@ -20,19 +20,11 @@ export default function Navbar() {
       setIsScrolled(window.scrollY > 50);
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-        navigate('/admin');
-      }
-    };
-
     window.addEventListener('scroll', handleScroll);
-    window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [navigate]);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,9 +51,6 @@ export default function Navbar() {
             <Link to="/shop" className="text-xs font-bold uppercase tracking-widest text-[#1D1D1F] hover:text-accent transition-colors">Shop</Link>
             <Link to="/shop?category=Men" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-[#1D1D1F] transition-colors">Men</Link>
             <Link to="/shop?category=Women" className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-[#1D1D1F] transition-colors">Women</Link>
-            {isAdmin && (
-              <Link to="/admin" className="text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors bg-red-50 px-3 py-1 rounded-full animate-pulse">Admin Dashboard</Link>
-            )}
           </div>
         </div>
 

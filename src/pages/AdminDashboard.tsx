@@ -344,8 +344,8 @@ export default function AdminDashboard() {
       </Dialog>
 
       <Dialog open={isInvoiceOpen} onOpenChange={setIsInvoiceOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl p-0 bg-white border-none shadow-2xl">
-          <div className="sticky top-0 z-10 p-4 bg-secondary/80 backdrop-blur-md border-b flex justify-between items-center sm:px-8">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl p-0 bg-white border-none shadow-2xl flex flex-col">
+          <div className="sticky top-0 z-50 p-4 bg-secondary/80 backdrop-blur-md border-b flex justify-between items-center sm:px-8 shrink-0">
             <h3 className="font-serif font-bold text-xl">Digital Invoice</h3>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" className="rounded-xl gap-2 bg-white" onClick={printInvoice}>
@@ -357,7 +357,8 @@ export default function AdminDashboard() {
             </div>
           </div>
           
-          <div id="invoice-content" className="p-8 sm:p-12 bg-white min-h-[600px] text-gray-800">
+          <div className="overflow-y-auto flex-grow h-full custom-scrollbar bg-white">
+            <div id="invoice-content" className="p-8 sm:p-12 bg-white text-gray-800 min-h-[1100px]">
             {viewingOrder && (
               <div className="space-y-12">
                 <div className="flex justify-between items-start">
@@ -371,11 +372,13 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <h1 className="text-4xl font-serif font-bold text-primary mb-4">INVOICE</h1>
+                    <h1 className="text-5xl font-serif font-black text-primary mb-4 tracking-tighter">INVOICE</h1>
                     <div className="space-y-1 text-sm">
-                      <p className="font-bold">Order #: <span className="text-accent font-mono text-lg">{viewingOrder.orderNumber || viewingOrder.id.slice(0, 8)}</span></p>
+                      <p className="font-bold">Order #: <span className="text-accent font-mono text-xl">#{viewingOrder.orderNumber || viewingOrder.id.slice(0, 6)}</span></p>
                       <p className="text-gray-500">Date: {formatDateTime(viewingOrder.createdAt)}</p>
-                      <p className="text-gray-500 capitalize">Status: <span className="font-bold text-primary">{viewingOrder.status}</span></p>
+                      <p className="text-gray-500 uppercase tracking-widest text-[10px] font-bold mt-2">
+                        Status: <span className={`px-2 py-0.5 rounded-md ${viewingOrder.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{viewingOrder.status}</span>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -425,7 +428,7 @@ export default function AdminDashboard() {
                         <TableRow key={id} className="border-gray-50">
                           <TableCell className="py-4">
                             <p className="font-bold text-primary">{item.name}</p>
-                            <p className="text-[10px] text-gray-400 font-medium italic mt-0.5">Item Code: {item.id.slice(0, 10)}</p>
+                            <p className="text-[10px] text-gray-400 font-medium italic mt-0.5">Item Code: {item.id ? item.id.slice(0, 10) : 'N/A'}</p>
                           </TableCell>
                           <TableCell className="text-center font-mono py-4">৳{item.price.toFixed(2)}</TableCell>
                           <TableCell className="text-center font-medium py-4">{item.quantity}</TableCell>
@@ -473,8 +476,9 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogContent>
+    </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
         <Card className="rounded-3xl border-none shadow-sm bg-white p-6">
