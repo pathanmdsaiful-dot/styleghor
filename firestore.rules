@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && (
+        request.auth.token.email_verified == true || 
+        request.auth.token.email == 'pathanmdsaiful@gmail.com'
+      );
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) || 
+        request.auth.token.email == 'pathanmdsaiful@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.role in ['customer', 'admin'] &&
+             data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.keys().size() >= 3;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'phoneNumber', 'role']) &&
+                    (incoming().role == existing().role || isAdmin());
+    }
+
+    // --- Product Validation ---
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.price is number && data.price >= 0 &&
+             data.category is string &&
+             data.stock is number && data.stock >= 0;
+    }
+
+    match /metadata/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /products/{productId} {
+      // Allow everyone to read products (get and list)
+      allow get: if true;
+      allow list: if true; 
+
+      allow create: if isAdmin() && isValidProduct(incoming()) && isEmailVerified();
+      allow update: if isAdmin() && isValidProduct(incoming()) && isEmailVerified();
+      allow delete: if isAdmin();
+
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isEmailVerified() && incoming().userId == request.auth.uid &&
+                       incoming().rating is number && incoming().rating >= 1 && incoming().rating <= 5;
+        allow update, delete: if isAdmin() || (isEmailVerified() && existing().userId == request.auth.uid);
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin() && isEmailVerified();
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin() && isEmailVerified();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isEmailVerified();
+    }
+
+    // --- Order Validation ---
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isEmailVerified() && incoming().userId == request.auth.uid &&
+                       incoming().status == 'pending';
+      allow update: if isAdmin() || (isEmailVerified() && existing().userId == request.auth.uid && incoming().status == 'cancelled' && existing().status == 'pending');
+    }
+
+    // Admin check path
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == adminId && (request.auth.token.email == 'pathanmdsaiful@gmail.com' || isAdmin());
+    }
+
+    // Test connection path
+    match /test/{docId} {
+      allow read: if true;
+    }
+  }
+}

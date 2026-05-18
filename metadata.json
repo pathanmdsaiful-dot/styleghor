@@ -1,0 +1,12 @@
+{
+  "name": "Style Ghor",
+  "description": "A premium, professional E-commerce application featuring AI recommendations, real-time inventory management, and a secure hidden admin dashboard.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
